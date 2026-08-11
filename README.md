@@ -1,20 +1,37 @@
-# 警務資訊系統｜Render 同步版 v3
+# 警務資訊系統 — PWA App 模式 Patch
 
-## 登入
-- 玩家：`130`
-- 後台：`1357924680`
-- 同一個登入欄；不設 SYS-ADMIN 按鈕。
+將以下 4 個檔案放入 GitHub repo 的 `public/`：
 
-## 同步
-後台資料不再存於 localStorage，而是 Render PostgreSQL。
-任何裝置使用同一個 Render 網址，都會讀取同一份囚犯資料。
+- `app.webmanifest`
+- `sw.js`
+- `icon-192.svg`
+- `icon-512.svg`
 
-## 部署
-1. 將整個資料夾放入 GitHub repository 根目錄。
-2. Render Dashboard → New → Blueprint。
-3. 連接該 GitHub repository。
-4. Render 會讀取 `render.yaml`，建立 Web Service + PostgreSQL。
-5. Deploy 完成後使用 `https://你的服務名.onrender.com`。
+然後修改 `public/index.html`。
 
-## 注意
-Render Free Postgres 目前建立後 30 日會到期。如活動需要長期保存資料，請升級資料庫或改用長期 PostgreSQL。
+## 在 `<head>` 內加入
+
+```html
+<!-- PWA -->
+<link rel="manifest" href="/app.webmanifest">
+<meta name="theme-color" content="#06101a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="警務系統">
+```
+
+## 在 `</body>` 前加入
+
+```html
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js");
+  });
+}
+</script>
+```
+
+Commit 後，Render 重新 deploy。
+
+Service worker 特別排除 `/api/`，所以囚犯查詢與後台資料仍會讀取 Render / PostgreSQL 最新資料，不會因 PWA cache 而停留在舊資料。
