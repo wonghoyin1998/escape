@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
+  <link rel="manifest" href="/app.webmanifest">
+<meta name="theme-color" content="#06101a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="警務系統">
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>警務資訊系統｜機密檔案查閱</title>
 <style>
@@ -32,4 +37,10 @@ async function resetAll(){if(!confirm('確定清除所有囚犯資料？'))retur
 function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();}
 function clock(){document.getElementById('clock').textContent=new Date().toLocaleString('zh-HK',{hour12:false})}setInterval(clock,1000);clock();
 document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(document.activeElement?.id==='loginPassword')login();if(document.activeElement?.id==='prisonerCode')lookupPrisoner();});boot();
+</script><script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js");
+  });
+}
 </script></body></html>
