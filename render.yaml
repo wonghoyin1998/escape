@@ -17,5 +17,10 @@ services:
         generateValue: true
       - key: DATABASE_URL
         fromDatabase:
-          name: camp-route-conquest-db
+          name: escape-room-police-db
           property: connectionString
+
+databases:
+  - name: escape-room-police-db
+    plan: free
+    databaseName: police_system
