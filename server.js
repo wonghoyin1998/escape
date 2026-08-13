@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-const SYSTEM_PASSWORD = process.env.SYSTEM_PASSWORD || '130';
+const SYSTEM_PASSWORD = process.env.SYSTEM_PASSWORD || '3410';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '1357924680';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'change-this-secret';
 
@@ -45,7 +45,7 @@ async function initDb() {
   if (rows[0].count === 0) {
     await pool.query(
       'INSERT INTO prisoner_files (code1, code2, secret) VALUES ($1, $2, $3)',
-      ['0000', null, '機密信息尚未設定。\n請由管理後台更新此內容。']
+      ['0000', null, '機密信息尚未設定。\\n請由管理後台更新此內容。']
     );
   }
 }
@@ -113,7 +113,9 @@ app.post('/api/lookup', requireRole('user', 'admin'), async (req, res, next) => 
 
 app.get('/api/admin/prisoners', requireRole('admin'), async (req, res, next) => {
   try {
-    const { rows } = await pool.query('SELECT id, code1, code2, secret, updated_at FROM prisoner_files ORDER BY id');
+    const { rows } = await pool.query(
+      'SELECT id, code1, code2, secret, updated_at FROM prisoner_files ORDER BY id'
+    );
     res.json(rows);
   } catch (e) { next(e); }
 });
@@ -124,8 +126,12 @@ app.post('/api/admin/prisoners', requireRole('admin'), async (req, res, next) =>
     const code2 = cleanCode(req.body?.code2) || null;
     const secret = String(req.body?.secret ?? '');
     if (!code1) return res.status(400).json({ error: '囚犯編號 1 不可留空。' });
-    if (code2 && code1 === code2) return res.status(400).json({ error: '兩個囚犯編號不可相同。' });
-    if (await duplicateCode(code1, code2)) return res.status(409).json({ error: '其中一個囚犯編號已被其他檔案使用。' });
+    if (code2 && code1 === code2) {
+      return res.status(400).json({ error: '兩個囚犯編號不可相同。' });
+    }
+    if (await duplicateCode(code1, code2)) {
+      return res.status(409).json({ error: '其中一個囚犯編號已被其他檔案使用。' });
+    }
     const { rows } = await pool.query(
       'INSERT INTO prisoner_files (code1, code2, secret) VALUES ($1,$2,$3) RETURNING id, code1, code2, secret, updated_at',
       [code1, code2, secret]
@@ -141,8 +147,12 @@ app.put('/api/admin/prisoners/:id', requireRole('admin'), async (req, res, next)
     const code2 = cleanCode(req.body?.code2) || null;
     const secret = String(req.body?.secret ?? '');
     if (!code1) return res.status(400).json({ error: '囚犯編號 1 不可留空。' });
-    if (code2 && code1 === code2) return res.status(400).json({ error: '兩個囚犯編號不可相同。' });
-    if (await duplicateCode(code1, code2, id)) return res.status(409).json({ error: '其中一個囚犯編號已被其他檔案使用。' });
+    if (code2 && code1 === code2) {
+      return res.status(400).json({ error: '兩個囚犯編號不可相同。' });
+    }
+    if (await duplicateCode(code1, code2, id)) {
+      return res.status(409).json({ error: '其中一個囚犯編號已被其他檔案使用。' });
+    }
     const { rows } = await pool.query(
       'UPDATE prisoner_files SET code1=$1, code2=$2, secret=$3, updated_at=NOW() WHERE id=$4 RETURNING id, code1, code2, secret, updated_at',
       [code1, code2, secret, id]
@@ -161,12 +171,15 @@ app.delete('/api/admin/prisoners/:id', requireRole('admin'), async (req, res, ne
 });
 
 app.delete('/api/admin/prisoners', requireRole('admin'), async (req, res, next) => {
-  try { await pool.query('DELETE FROM prisoner_files'); res.json({ ok: true }); }
-  catch (e) { next(e); }
+  try {
+    await pool.query('DELETE FROM prisoner_files');
+    res.json({ ok: true });
+  } catch (e) { next(e); }
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: '伺服器錯誤，請稍後再試。' });
